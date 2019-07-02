@@ -1,141 +1,78 @@
 import 'dart:async';
-import 'dart:io';
-import 'image_details.dart';
-import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:flutter/services.dart';
+import 'package:barcode_scan/barcode_scan.dart';
+import 'package:simple_permissions/simple_permissions.dart';
 
-List<CameraDescription> cameras;
-
-Future<void> main() async {
-  cameras = await availableCameras();
-  runApp(MyApp());
+void main() {
+  runApp(new MyApp());
 }
 
-class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
+class MyApp extends StatefulWidget {
+  @override
+  _MyAppState createState() => new _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  String _reader='';
+  Permission permission= Permission.Camera;
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.lightGreen,
-      ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
-
-  final String title;
-
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
-
-  CameraController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _controller = CameraController(cameras[0], ResolutionPreset.medium);
-    print(_controller);
-    _controller.initialize().then((_) {
-      if (!mounted) {
-        return null;
-      }
-      setState(() {});
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _takePicturePressed() {
-    _takePicture().then((String filePath) {
-      if (mounted) {
-        Navigator.push(context,
-            MaterialPageRoute(builder: (context) => ImageDetail(filePath)));
-      }
-    });
-  }
-
-  String timestamp() => DateTime.now().millisecondsSinceEpoch.toString();
-
-  Future<String> _takePicture() async {
-    print(_controller);
-    if (!_controller.value.isInitialized) {
-      print("Controller is not initialized");
-      return null;
-    }
-
-    final Directory extDir = await getApplicationDocumentsDirectory();
-    final String photoDir = '${extDir.path}/Photos/image_test';
-    await Directory(photoDir).create(recursive: true);
-    final String filePath = '$photoDir/${timestamp()}.jpg';
-
-    if (_controller.value.isTakingPicture) {
-      print("Currently already taking a picture");
-      return null;
-    }
-
-    try {
-      await _controller.takePicture(filePath);
-    } on CameraException catch (e) {
-      print("camera exception occured: $e");
-      return null;
-    }
-
-    return filePath;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (!_controller.value.isInitialized) {
-      return Center(child: Text("Controller is not yet initialized!"));
-    }
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.start,
+    return new MaterialApp(
+      debugShowCheckedModeBanner: false,
+      color: Colors.pinkAccent,
+      home:new Scaffold(
+        appBar: new AppBar(title: new Text("Scanner"),backgroundColor: Colors.orange,),
+        body: new Column(
           children: <Widget>[
-            AspectRatio(
-              aspectRatio: _controller.value.aspectRatio,
-              child: CameraPreview(_controller),
+
+            new Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10.0),
             ),
-            Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Center(
-                child: RaisedButton.icon(
-                  icon: Icon(Icons.camera),
-                  label: Text("Take Picture"),
-                  onPressed: _takePicturePressed,
-                ),
-              ),
-            )
+            new RaisedButton(
+
+              splashColor: Colors.pinkAccent,
+              color: Colors.red,
+              child: new Text("Scan",style: new TextStyle(fontSize: 20.0,color: Colors.white),),
+              onPressed: scan,
+            ),
+            new Padding(padding: const EdgeInsets.symmetric(vertical: 10.0), ),
+            new Text('$_reader',softWrap: true, style: new TextStyle(fontSize: 30.0,color: Colors.blue),),
+
           ],
         ),
       ),
     );
   }
+
+
+
+  requestPermission() async {
+    var resultTemp = await SimplePermissions.requestPermission(permission);
+    bool result = resultTemp == 'true';
+    setState(()=> new SnackBar
+      (backgroundColor: Colors.red,content: new Text(" $result"),),
+
+    );
+  }
+  scan() async {
+    try {
+      String reader= await BarcodeScanner.scan();
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() => this._reader=reader);
+    } on PlatformException catch(e) {
+      if(e.code==BarcodeScanner.CameraAccessDenied) {requestPermission();}
+      else{setState(()=> _reader = "unknown exception $e");}
+    }on FormatException{
+      setState(() => _reader = 'null (User returned using the "back"-button before scanning anything. Result)');
+    } catch (e) {
+      setState(() => _reader = 'Unknown error: $e');
+    }
+
+  }
+
 }
