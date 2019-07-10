@@ -1,16 +1,32 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:barcode_scan/barcode_scan.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import './productDetails.dart';
 import 'package:provider/provider.dart';
 import 'Provider.dart';
+import 'package:camera/camera.dart';
+import './cameraStream.dart';
 
-void main() {
-  runApp(new MyApp());
+Future<void> main() async {
+  final cameras = await availableCameras();
+  final firstCamera = cameras.first;
+
+  runApp(
+    new MaterialApp(
+      theme: ThemeData.dark(),
+      home: ChangeNotifierProvider<OnProductPage>(
+          builder: (_) => OnProductPage(), child: CameraStream(camera: firstCamera,)),
+
+      initialRoute: '/',
+      routes: <String, WidgetBuilder> {
+        '/scan':(BuildContext context) => CameraStream(camera:firstCamera),
+        '/productdetails' : (BuildContext context) => ProductDetails()
+      },
+    ),
+  );
 }
-
+/*
 class MyApp extends StatefulWidget {
   @override
   _MyAppState createState() => new _MyAppState();
@@ -93,9 +109,9 @@ class _MyScanState extends State<MyScan> {
       String barcode = await BarcodeScanner.scan();
       barCode.setBarCode(barcode);
       print(barCode.getBarCode());
-      if(barCode.getBarCode().length > 1 && isFound == true){
-        setState(()=>{});
-        isFound=false;
+      if (barCode.getBarCode().length > 1 && isFound == true) {
+        setState(() => {});
+        isFound = false;
       }
     } on PlatformException catch (e) {
       if (e.code == BarcodeScanner.CameraAccessDenied) {
@@ -122,4 +138,4 @@ class MyHome extends StatelessWidget {
       },
     ));
   }
-}
+}*/

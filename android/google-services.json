@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "1052585796272",
+    "firebase_url": "https://mlkit-dev-7e503.firebaseio.com",
+    "project_id": "mlkit-dev-7e503",
+    "storage_bucket": "mlkit-dev-7e503.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1052585796272:android:578b03802290044c",
+        "android_client_info": {
+          "package_name": "com.example.yukalike.dev"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1052585796272-c60ihorkqkblofgrvltoqhmsv236q337.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBUc19QqgYFVN2IT2GgGPJqWrFRUeNvTUA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1052585796272-c60ihorkqkblofgrvltoqhmsv236q337.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

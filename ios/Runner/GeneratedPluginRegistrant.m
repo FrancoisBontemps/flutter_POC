@@ -3,16 +3,16 @@
 //
 
 #import "GeneratedPluginRegistrant.h"
-#import <barcode_scan/BarcodeScanPlugin.h>
+#import <camera/CameraPlugin.h>
+#import <image_picker/ImagePickerPlugin.h>
 #import <path_provider/PathProviderPlugin.h>
-#import <simple_permissions/SimplePermissionsPlugin.h>
 
 @implementation GeneratedPluginRegistrant
 
 + (void)registerWithRegistry:(NSObject<FlutterPluginRegistry>*)registry {
-  [BarcodeScanPlugin registerWithRegistrar:[registry registrarForPlugin:@"BarcodeScanPlugin"]];
+  [CameraPlugin registerWithRegistrar:[registry registrarForPlugin:@"CameraPlugin"]];
+  [FLTImagePickerPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTImagePickerPlugin"]];
   [FLTPathProviderPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTPathProviderPlugin"]];
-  [SimplePermissionsPlugin registerWithRegistrar:[registry registrarForPlugin:@"SimplePermissionsPlugin"]];
 }
 
 @end
