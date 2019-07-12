@@ -14,6 +14,7 @@ Future<void> main() async {
 
   runApp(
     new MaterialApp(
+      debugShowCheckedModeBanner: false,
       theme: ThemeData.dark(),
       home: ChangeNotifierProvider<OnProductPage>(
           builder: (_) => OnProductPage(), child: CameraStream(camera: firstCamera,)),

@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:yuka_like/Provider.dart';
 import 'package:provider/provider.dart';
 import 'package:yuka_like/productDetails.dart';
+import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 
 class CameraStream extends StatefulWidget {
   final CameraDescription camera;
@@ -37,23 +38,6 @@ class CameraStreamState extends State<CameraStream> {
     });
   }
 
-  void takePhotos() async {
-    try {
-      await _initializeControllerFuture;
-
-      final path = join(
-        (await getTemporaryDirectory()).path,
-        '${DateTime.now()}.png',
-      );
-
-      await _controller.takePicture(path);
-
-    print(path.toString());
-    } catch (e) {
-      print(e);
-    }
-  }
-
   @override
   void initState() {
     super.initState();
@@ -69,14 +53,46 @@ class CameraStreamState extends State<CameraStream> {
 
   @override
   void dispose() {
-    _controller.dispose();
+    _controller?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    Timer.periodic(Duration(seconds: 1), (timer) {
-      takePhotos();
+    Timer.periodic(Duration(seconds: 1), (timer) async {
+      try {
+        await _initializeControllerFuture;
+
+        final path = join(
+          (await getTemporaryDirectory()).path,
+          '${DateTime.now()}.png',
+        );
+        await _controller.takePicture(path);
+        FirebaseVisionImage ourImage =
+            FirebaseVisionImage.fromFilePath(path.toString());
+
+        BarcodeDetector barcodeDetector =
+            FirebaseVision.instance.barcodeDetector();
+        List barCodes = await barcodeDetector.detectInImage(ourImage);
+
+        for (Barcode readableCode in barCodes) {
+          timer.cancel();
+          print(readableCode.displayValue);
+          Navigator.of(context).push(MaterialPageRoute<void>(
+            builder: (BuildContext context) {
+              return ChangeNotifierProvider<BarCode>(
+                builder: (context) => BarCode(readableCode.displayValue.toString()),
+                child: Scaffold(
+                  body: ProductDetails(),
+                ),
+              );
+            },
+          ));
+          break;
+        }
+      } catch (e) {
+        print(e);
+      }
       return;
     });
     double _widthScreen = MediaQuery.of(context).size.width;
@@ -129,47 +145,8 @@ class CameraStreamState extends State<CameraStream> {
                 ]),
               ),
             ]),
-            floatingActionButton: FloatingActionButton(
-              child: Icon(Icons.camera_alt),
-              onPressed: () async {
-                try {
-                  await _initializeControllerFuture;
-
-                  final path = join(
-                    (await getTemporaryDirectory()).path,
-                    '${DateTime.now()}.png',
-                  );
-
-                  await _controller.takePicture(path);
-
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          DisplayPictureScreen(imagePath: path),
-                    ),
-                  );
-                } catch (e) {
-                  print(e);
-                }
-              },
-            ),
           );
         }));
-  }
-}
-
-class DisplayPictureScreen extends StatelessWidget {
-  final String imagePath;
-
-  const DisplayPictureScreen({Key key, this.imagePath}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Display the Picture')),
-      body: Image.file(File(imagePath)),
-    );
   }
 }
 

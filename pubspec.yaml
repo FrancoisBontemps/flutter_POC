@@ -19,7 +19,7 @@ dependencies:
   provider: 3.0.0
   camera :
   path :
-  image_picker: 0.6.0+15
+  firebase_ml_vision:
 
 dev_dependencies:
   flutter_test:
