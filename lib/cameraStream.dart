@@ -26,6 +26,7 @@ class CameraStreamState extends State<CameraStream> {
   CameraController _controller;
   Future<void> _initializeControllerFuture;
   bool _productScan = true;
+  bool _isDetected = false;
 
   void startTimer() {
     Timer(Duration(seconds: 5), () {
@@ -53,7 +54,7 @@ class CameraStreamState extends State<CameraStream> {
 
   @override
   void dispose() {
-    _controller?.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
@@ -76,19 +77,24 @@ class CameraStreamState extends State<CameraStream> {
         List barCodes = await barcodeDetector.detectInImage(ourImage);
 
         for (Barcode readableCode in barCodes) {
-          timer.cancel();
           print(readableCode.displayValue);
-          Navigator.of(context).push(MaterialPageRoute<void>(
-            builder: (BuildContext context) {
-              return ChangeNotifierProvider<BarCode>(
-                builder: (context) => BarCode(readableCode.displayValue.toString()),
-                child: Scaffold(
-                  body: ProductDetails(),
-                ),
-              );
-            },
-          ));
-          break;
+          Navigator.of(context)
+              .push(MaterialPageRoute<void>(builder: (BuildContext context) {
+            return ChangeNotifierProvider<BarCode>(
+                builder: (context) => BarCode(''),
+                child: Consumer<BarCode>(builder: (context, provider, child) {
+                  return provider.getBarCode() == ''
+                      ? ChangeNotifierProvider<BarCode>(
+                          builder: (context) =>
+                              BarCode(readableCode.displayValue.toString()),
+                          child: Scaffold(
+                            body: ProductDetails(),
+                          ),
+                        )
+                      : Container();
+                }));
+          }));
+          timer.cancel();
         }
       } catch (e) {
         print(e);
@@ -97,22 +103,24 @@ class CameraStreamState extends State<CameraStream> {
     });
     double _widthScreen = MediaQuery.of(context).size.width;
     double _heightScreen = MediaQuery.of(context).size.height;
-    return ChangeNotifierProvider<OnProductPage>(
-        builder: (context) => OnProductPage(),
-        child: Consumer<OnProductPage>(builder: (context, provider, child) {
+    return ChangeNotifierProvider<BarCode>(
+        builder: (context) => BarCode(''),
+        child: Consumer<BarCode>(builder: (context, provider, child) {
           return Scaffold(
             appBar: AppBar(title: Text('Please scan your product')),
             body: new Stack(children: <Widget>[
-              FutureBuilder<void>(
-                future: _initializeControllerFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.done) {
-                    return CameraPreview(_controller);
-                  } else {
-                    return Center(child: CircularProgressIndicator());
-                  }
-                },
-              ),
+              provider.getBarCode() == ''
+                  ? FutureBuilder<void>(
+                      future: _initializeControllerFuture,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.done) {
+                          return CameraPreview(_controller);
+                        } else {
+                          return Center(child: CircularProgressIndicator());
+                        }
+                      },
+                    )
+                  : Container(),
               new Center(
                 child: Stack(children: <Widget>[
                   Container(

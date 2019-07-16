@@ -20,6 +20,7 @@ dependencies:
   camera :
   path :
   firebase_ml_vision:
+  flutter_launcher_icons :
 
 dev_dependencies:
   flutter_test:
@@ -67,3 +68,7 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.io/custom-fonts/#from-packages
+flutter_icons :
+  image_path : "icon/icon.png"
+  android: true
+  ios: true
